@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#101114" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Rotina" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<title>Rotina Diária</title>
+<style>
+  :root {
+    --bg: #101114;
+    --panel: #1A1B1F;
+    --panel2: #202227;
+    --border: #2C2E34;
+    --text: #E6E7EA;
+    --muted: #8A8C93;
+    --muted2: #5C5E64;
+    --blue: #3D6690;
+    --blue-dim: #2A4A66;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 22px 16px calc(24px + env(safe-area-inset-bottom));
+    min-height: 100vh;
+  }
+  header { margin-bottom: 16px; }
+  .title { font-size: 20px; font-weight: 600; }
+  .date { font-size: 12px; color: var(--muted); margin-top: 2px; text-transform: capitalize; }
+
+  .tabs {
+    display: flex;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 18px;
+  }
+  .tab {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 9px 0;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .tab.active { background: var(--blue-dim); color: var(--text); }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 6px;
+  }
+  .item.priority { border-left-color: var(--blue); }
+
+  .check {
+    width: 20px; height: 20px; min-width: 20px;
+    margin-top: 1px;
+    border-radius: 4px;
+    border: 2px solid var(--muted2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    font-size: 12px;
+    color: var(--bg);
+  }
+  .item.done .check { border-color: var(--blue); background: var(--blue); }
+
+  .item-body { flex: 1; min-width: 0; }
+  .item-text { font-size: 14px; word-break: break-word; }
+  .item.done .item-text { text-decoration: line-through; color: var(--muted); }
+  .item-meta { font-size: 10.5px; color: var(--muted2); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .item-actions { display: flex; gap: 2px; }
+  .icon-btn {
+    background: none; border: none; color: var(--muted2);
+    cursor: pointer; padding: 4px; font-size: 13px; line-height: 1;
+  }
+  .icon-btn:hover { color: var(--text); }
+
+  .empty {
+    color: var(--muted2);
+    font-size: 12.5px;
+    padding: 16px 0;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+
+  .edit-panel {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .edit-row { display: flex; gap: 8px; }
+  input[type="text"], input[type="time"], select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 9px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    width: 100%;
+  }
+  input[type="time"] { max-width: 110px; }
+  select { max-width: 140px; }
+  label.chk { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+  .edit-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn {
+    border: none; border-radius: 5px; padding: 7px 12px;
+    font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-ghost { background: none; color: var(--muted); border: 1px solid var(--border); }
+
+  .add-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .add-box .edit-row { flex-wrap: wrap; }
+  .add-box input[type="text"] { flex: 1; min-width: 140px; }
+  .add-btn {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .meal-block { margin-bottom: 6px; }
+
+  #offlineBadge {
+    display: none;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted2);
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">Rotina Diária</div>
+    <div class="date" id="dateLabel"></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tarefas">Tarefas Diárias</button>
+    <button class="tab" data-tab="dieta">Dieta Diária</button>
+  </div>
+
+  <div id="tarefasTab"></div>
+  <div id="dietaTab" style="display:none;"></div>
+
+  <div id="offlineBadge">MODO OFFLINE</div>
+</div>
+
+<script>
+const TASK_CAT = "tarefa";
+const MEAL_CATS = [
+  { id: "cafe", label: "Café da manhã" },
+  { id: "almoco", label: "Almoço" },
+  { id: "lanche", label: "Lanche" },
+  { id: "janta", label: "Janta" },
+];
+const INTERVAL_OPTIONS = [
+  { value: "1", label: "Diário" },
+  { value: "2", label: "A cada 2 dias" },
+  { value: "3", label: "A cada 3 dias" },
+  { value: "7", label: "A cada 7 dias" },
+  { value: "null", label: "Indefinido" },
+];
+
+const STORAGE_KEY = "rotina:items";
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+let currentTab = "tarefas";
+let editingId = null;
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function dayDiff(a, b) {
+  const da = new Date(a + "T00:00:00");
+  const db = new Date(b + "T00:00:00");
+  return Math.round((db - da) / 86400000);
+}
+function checkResets() {
+  const today = todayStr();
+  let changed = false;
+  items.forEach((it) => {
+    if (it.done && it.doneDate && it.interval !== null) {
+      if (dayDiff(it.doneDate, today) >= it.interval) {
+        it.done = false;
+        it.doneDate = null;
+        changed = true;
+      }
+    }
+  });
+  if (changed) save();
+}
+
+function intervalLabel(interval) {
+  const opt = INTERVAL_OPTIONS.find((o) => o.value === String(interval));
+  return opt ? opt.label : "Diário";
+}
+
+function toggleDone(id) {
+  const it = items.find((x) => x.id === id);
+  it.done = !it.done;
+  it.doneDate = it.done ? todayStr() : null;
+  save();
+  renderAll();
+}
+function removeItem(id) {
+  items = items.filter((x) => x.id !== id);
+  save();
+  renderAll();
+}
+function startEdit(id) { editingId = id; renderAll(); }
+function cancelEdit() { editingId = null; renderAll(); }
+function saveEdit(id, text, time, priority, interval) {
+  const it = items.find((x) => x.id === id);
+  it.text = text.trim() || it.text;
+  it.time = time || "";
+  if (it.cat === TASK_CAT) it.priority = priority;
+  it.interval = interval === "null" ? null : parseInt(interval, 10);
+  editingId = null;
+  save();
+  renderAll();
+}
+
+function addItem(cat, text, time, priority, interval) {
+  text = text.trim();
+  if (!text) return;
+  items.push({
+    id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+    text, time: time || "",
+    cat,
+    priority: cat === TASK_CAT ? priority : false,
+    interval: interval === "null" ? null : parseInt(interval || "1", 10),
+    done: false,
+    doneDate: null,
+  });
+  save();
+  renderAll();
+}
+
+function el(tag, props = {}, children = []) {
+  const e = document.createElement(tag);
+  Object.entries(props).forEach(([k, v]) => {
+    if (k === "class") e.className = v;
+    else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  });
+  children.forEach((c) => c && e.appendChild(c));
+  return e;
+}
+
+function intervalSelect(selectedValue) {
+  const sel = el("select");
+  INTERVAL_OPTIONS.forEach((o) => {
+    const opt = el("option", { value: o.value, text: o.label });
+    if (String(selectedValue) === o.value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  return sel;
+}
+
+function renderItem(it) {
+  if (editingId === it.id) {
+    const textInput = el("input", { type: "text", value: it.text });
+    textInput.value = it.text;
+    const timeInput = el("input", { type: "time" });
+    timeInput.value = it.time || "";
+    const intervalSel = intervalSelect(it.interval === null ? "null" : it.interval);
+    let priorityCheckbox = null;
+
+    const row1 = el("div", { class: "edit-row" }, [textInput]);
+    const row2Children = [timeInput, intervalSel];
+    const row2 = el("div", { class: "edit-row" }, row2Children);
+
+    let priorityRow = null;
+    if (it.cat === TASK_CAT) {
+      priorityCheckbox = el("input", { type: "checkbox" });
+      priorityCheckbox.checked = !!it.priority;
+      priorityRow = el("label", { class: "chk" }, [priorityCheckbox, document.createTextNode("Prioritária")]);
+    }
+
+    const saveBtn = el("button", { class: "btn btn-primary", text: "Salvar", onclick: () =>
+      saveEdit(it.id, textInput.value, timeInput.value, priorityCheckbox ? priorityCheckbox.checked : it.priority, intervalSel.value)
+    });
+    const cancelBtn = el("button", { class: "btn btn-ghost", text: "Cancelar", onclick: cancelEdit });
+    const btnRow = el("div", { class: "edit-btns" }, [cancelBtn, saveBtn]);
+
+    const children = [row1, row2];
+    if (priorityRow) children.push(priorityRow);
+    children.push(btnRow);
+    return el("div", { class: "edit-panel" }, children);
+  }
+
+  const check = el("button", { class: "check", onclick: () => toggleDone(it.id) }, []);
+  if (it.done) check.textContent = "✓";
+
+  const textEl = el("div", { class: "item-text", text: it.text });
+  const metaParts = [];
+  if (it.time) metaParts.push(it.time);
+  metaParts.push(intervalLabel(it.interval));
+  const meta = el("div", { class: "item-meta", text: metaParts.join(" · ") });
+  const body = el("div", { class: "item-body" }, [textEl, meta]);
+
+  const editBtn = el("button", { class: "icon-btn", text: "✎", onclick: () => startEdit(it.id) });
+  const rmBtn = el("button", { class: "icon-btn", text: "✕", onclick: () => removeItem(it.id) });
+  const actions = el("div", { class: "item-actions" }, [editBtn, rmBtn]);
+
+  const classes = "item" + (it.done ? " done" : "") + (it.priority ? " priority" : "");
+  return el("div", { class: classes }, [check, body, actions]);
+}
+
+function renderDoneItem(it) {
+  const check = el("button", { class: "check", onclick: () => toggleDone(it.id) });
+  check.textContent = "✓";
+
+  const textEl = el("div", { class: "item-text", text: it.text });
+  const metaParts = [];
+  if (it.time) metaParts.push(it.time);
+  metaParts.push(intervalLabel(it.interval));
+  if (it.doneDate) metaParts.push("feito em " + it.doneDate.split("-").reverse().join("/"));
+  const meta = el("div", { class: "item-meta", text: metaParts.join(" · ") });
+  const body = el("div", { class: "item-body" }, [textEl, meta]);
+
+  const rmBtn = el("button", { class: "icon-btn", text: "✕ apagar", onclick: () => {
+    if (confirm(`Apagar "${it.text}" definitivamente? Ele não vai mais reaparecer.`)) removeItem(it.id);
+  }});
+  const actions = el("div", { class: "item-actions" }, [rmBtn]);
+
+  const classes = "item done" + (it.priority ? " priority" : "");
+  return el("div", { class: classes }, [check, body, actions]);
+}
+
+let expanded = {};
+function renderDoneToggle(key, doneList, appendFn) {
+  if (doneList.length === 0) return;
+  const btn = el("button", {
+    class: "icon-btn",
+    text: (expanded[key] ? "Ocultar concluídos" : "Ver concluídos") + ` (${doneList.length})`,
+  });
+  btn.style.cssText = "font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:6px 10px;margin:2px 0 10px;display:block;width:100%;text-align:center;background:var(--panel);cursor:pointer;";
+  btn.onclick = () => { expanded[key] = !expanded[key]; renderAll(); };
+  appendFn(btn);
+  if (expanded[key]) {
+    doneList.forEach((it) => appendFn(editingId === it.id ? renderItem(it) : renderDoneItem(it)));
+  }
+}
+
+function renderTarefas() {
+  const container = document.getElementById("tarefasTab");
+  container.innerHTML = "";
+
+  const pending = items.filter((it) => it.cat === TASK_CAT && !it.done);
+  const priorityList = pending.filter((it) => it.priority);
+  const normalList = pending.filter((it) => !it.priority);
+
+  container.appendChild(el("div", { class: "section-title", text: "Prioritárias" }));
+  if (priorityList.length === 0 && editingId === null) {
+    container.appendChild(el("div", { class: "empty", text: "Nenhuma tarefa prioritária pendente." }));
+  } else {
+    priorityList.forEach((it) => container.appendChild(renderItem(it)));
+  }
+
+  container.appendChild(el("div", { class: "section-title", text: "Não prioritárias" }));
+  if (normalList.length === 0) {
+    container.appendChild(el("div", { class: "empty", text: "Nenhuma tarefa pendente." }));
+  } else {
+    normalList.forEach((it) => container.appendChild(renderItem(it)));
+  }
+
+  const doneTasks = items.filter((it) => it.cat === TASK_CAT && it.done);
+  renderDoneToggle("tarefas", doneTasks, (node) => container.appendChild(node));
+
+  // Add box
+  const textInput = el("input", { type: "text", placeholder: "Nova tarefa..." });
+  const timeInput = el("input", { type: "time" });
+  const intervalSel = intervalSelect("1");
+  const priorityCheckbox = el("input", { type: "checkbox" });
+  const priorityLabel = el("label", { class: "chk" }, [priorityCheckbox, document.createTextNode("Prioritária")]);
+  const addBtn = el("button", { class: "add-btn", text: "Adicionar tarefa" });
+
+  addBtn.onclick = () => {
+    addItem(TASK_CAT, textInput.value, timeInput.value, priorityCheckbox.checked, intervalSel.value);
+    textInput.value = "";
+    timeInput.value = "";
+    priorityCheckbox.checked = false;
+  };
+  textInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addBtn.click(); });
+
+  const row1 = el("div", { class: "edit-row" }, [textInput]);
+  const row2 = el("div", { class: "edit-row" }, [timeInput, intervalSel, priorityLabel]);
+  const addBox = el("div", { class: "add-box" }, [row1, row2, addBtn]);
+  container.appendChild(addBox);
+}
+
+function renderDieta() {
+  const container = document.getElementById("dietaTab");
+  container.innerHTML = "";
+
+  MEAL_CATS.forEach((meal) => {
+    const block = el("div", { class: "meal-block" });
+    block.appendChild(el("div", { class: "section-title", text: meal.label }));
+
+    const pending = items.filter((it) => it.cat === meal.id && !it.done);
+    if (pending.length === 0 && !items.some((it) => it.cat === meal.id && editingId === it.id)) {
+      block.appendChild(el("div", { class: "empty", text: "Nada adicionado ainda." }));
+    } else {
+      pending.forEach((it) => block.appendChild(renderItem(it)));
+    }
+    const doneMeal = items.filter((it) => it.cat === meal.id && it.done);
+    renderDoneToggle(meal.id, doneMeal, (node) => block.appendChild(node));
+
+    const textInput = el("input", { type: "text", placeholder: "Adicionar item..." });
+    const intervalSel = intervalSelect("1");
+    const addBtn = el("button", { class: "add-btn", text: "+" });
+    addBtn.style.padding = "8px 14px";
+    addBtn.onclick = () => {
+      addItem(meal.id, textInput.value, "", false, intervalSel.value);
+      textInput.value = "";
+    };
+    textInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addBtn.click(); });
+    const addRow = el("div", { class: "edit-row" }, [textInput, intervalSel, addBtn]);
+    block.appendChild(el("div", { class: "add-box" }, [addRow]));
+
+    container.appendChild(block);
+  });
+}
+
+function renderAll() {
+  checkResets();
+  renderTarefas();
+  renderDieta();
+}
+
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    currentTab = tab.dataset.tab;
+    document.getElementById("tarefasTab").style.display = currentTab === "tarefas" ? "block" : "none";
+    document.getElementById("dietaTab").style.display = currentTab === "dieta" ? "block" : "none";
+  };
+});
+
+const dateLabel = document.getElementById("dateLabel");
+function updateDateLabel() {
+  const d = new Date();
+  dateLabel.textContent = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+}
+updateDateLabel();
+renderAll();
+
+// checa reinício a cada minuto (caso o app fique aberto passando da meia-noite)
+setInterval(() => { updateDateLabel(); renderAll(); }, 60000);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch(console.error);
+  });
+}
+function updateOnlineStatus() {
+  document.getElementById("offlineBadge").style.display = navigator.onLine ? "none" : "block";
+}
+window.addEventListener("online", updateOnlineStatus);
+window.addEventListener("offline", updateOnlineStatus);
+updateOnlineStatus();
+</script>
+</body>
+</html>
