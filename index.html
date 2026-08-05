@@ -186,6 +186,39 @@
     color: var(--muted2);
     margin-top: 20px;
   }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 360px;
+    width: 100%;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .modal-text { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+  .modal-btn {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
 </style>
 </head>
 <body>
@@ -510,6 +543,23 @@ function updateDateLabel() {
 }
 updateDateLabel();
 renderAll();
+showWelcomeIfFirstTime();
+
+function showWelcomeIfFirstTime() {
+  if (localStorage.getItem("rotina:welcomed")) return;
+  const overlay = el("div", { class: "modal-overlay" });
+  const box = el("div", { class: "modal-box" }, [
+    el("div", { class: "modal-title", text: "Bem-vindo à Rotina Diária" }),
+    el("div", { class: "modal-text", text: "Suas tarefas e sua dieta, organizadas por dia. Tudo reinicia automaticamente conforme o prazo que você definir em cada item — e fica salvo direto no seu celular, mesmo offline." }),
+  ]);
+  const btn = el("button", { class: "modal-btn", text: "Entendi", onclick: () => {
+    localStorage.setItem("rotina:welcomed", "1");
+    overlay.remove();
+  }});
+  box.appendChild(btn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
 
 // checa reinício a cada minuto (caso o app fique aberto passando da meia-noite)
 setInterval(() => { updateDateLabel(); renderAll(); }, 60000);
